@@ -68,8 +68,8 @@ class Block {
       rect(xval * BLOCK_SIZE, yval * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
     }
     else if (held) {
-      xval = initial_x + 6;
-      yval = ADJ_GRID_HEIGHT - initial_y;
+      xval = initial_x - 9;
+      yval = initial_y;
       stroke(0);
       fill(r, g, b);
       rect(xval * BLOCK_SIZE, yval * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);

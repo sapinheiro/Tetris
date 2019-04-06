@@ -1,11 +1,6 @@
-// fix hold and next
-// add game over condition 
-// move piece with down arrow
-// limit on how often you can hold
-// add score/labels 
-// instructions?
-
 import java.util.Random;
+import processing.sound.*;
+SoundFile file;
 
 int frame = 0;
 int TETRIS_FRAMES = 20;
@@ -30,12 +25,27 @@ class Grid {
   ATetra nextTetra;
   // the held tetra piece
   ATetra heldTetra;
+  int linesCleared;
+  boolean justHeld;
   
   Grid() {
     allBlocks = new ArrayList<Block>();
     toBeCleared = new ArrayList<Integer>();
     nextTetra = null;
     heldTetra = null;
+    linesCleared = 0;
+    justHeld = false;
+    generateTetra();
+  }
+  
+  // resets the game
+  void reset() {
+    allBlocks = new ArrayList<Block>();
+    toBeCleared = new ArrayList<Integer>();
+    nextTetra = null;
+    heldTetra = null;
+    linesCleared = 0;
+    justHeld = false;
     generateTetra();
   }
   
@@ -95,6 +105,16 @@ class Grid {
     }
   }
   
+  // checks if the highest y is larger than the board
+  boolean isGameOver() {
+    for (Block b : allBlocks) {
+      if (b.y <= ADJ) {
+        return true;
+      }
+    }
+    return false;
+  }
+  
   // checks if the active tetra has either hit the ground
   // or other fallen blocks
   boolean tetraStopped() {
@@ -104,6 +124,7 @@ class Grid {
       
       // tetra is touching bottom of grid
       if (block_y == (ADJ_GRID_HEIGHT - 1)) {
+        justHeld = false;
         addBlocks(activeTetra);
         generateTetra();
         return true;
@@ -111,6 +132,7 @@ class Grid {
       // if tetra is touching other blocks
       for (Block b : allBlocks) {
         if (block_x == b.x && (block_y + 1) == b.y) {
+          justHeld = false;
           addBlocks(activeTetra);
           generateTetra();
           return true;
@@ -159,24 +181,25 @@ class Grid {
     for (int i = 0; i < tetra.blocks.length; i++) {
       allBlocks.add(tetra.blocks[i]);
     }
-    clearLines(); //<>//
+    clearLines();
   }
   
   // clears lines that are full, then adjusts entire board 
   void clearLines() {
     for (int y = ADJ; y < ADJ_GRID_HEIGHT; y++) {
-      if (lineFull(y)) { //<>//
+      if (lineFull(y)) {
         toBeCleared.add(y);
       }
-    } //<>//
+    }
   }
   
   // clear line at given y
   void clearLine(int y) {
     // removes block on line
-    for (int x = ADJ; x < ADJ_GRID_WIDTH; x++) { //<>//
+    for (int x = ADJ; x < ADJ_GRID_WIDTH; x++) {
       allBlocks.remove(blockExists(x, y));
     }
+    linesCleared += 1;
   }
   
   // checks if line at given y has a block at every x
@@ -259,6 +282,10 @@ class Grid {
   
   // holds the block until later
   void holdTetra() {
+    if (justHeld) {
+      return;
+    }
+    justHeld = true;
     if (heldTetra == null) {
       heldTetra = generateTetraByType(activeTetra.blocks[0].tetraType);
       activeTetra = generateTetraByType(nextTetra.blocks[0].tetraType);
@@ -273,6 +300,13 @@ class Grid {
   
   // draws the grid including the active tetra and fallen blocks
   void drawGrid() {
+    if (isGameOver()) {
+      String msg = "GAME OVER! FINAL SCORE IS " + linesCleared + "\nPress R to Reset";
+      fill(0, 0, 0);
+      textSize(30);
+      text(msg, 100, 50);
+      return;
+    }
     if (delay) {
       delay(250);
       delay = false;
@@ -291,11 +325,17 @@ class Grid {
     
     // draws blocks in nextTetra
     nextTetra.drawTetra(false, true);
+    fill(0, 0, 0);
+    textSize(20);
+    text("NEXT", (ADJ_GRID_WIDTH + 1) * BLOCK_SIZE, ADJ * BLOCK_SIZE);
     
-    if (heldTetra != null) {
+    if (heldTetra != null) { //<>//
       // draws blocks in heldTetra
       heldTetra.drawTetra(true, false);
     }
+    fill(0, 0, 0);
+    textSize(20);
+    text("HOLD", BLOCK_SIZE, ADJ * BLOCK_SIZE);
     
     // draws blocks on top of grid
     for (Block b : allBlocks) {
@@ -327,12 +367,17 @@ void setup() {
   size(600, 750);
   smooth();
   grid = new Grid();
+  file = new SoundFile(this, "Tetris99Theme.mp3");
+  file.play();
+  file.loop();
 }
 
 // generates the drawing
 // takes advantage of draw being called every frame and calls
 // new pieces to be generated or moving the active tetra down
 void draw() {
+  clear();
+  background(128, 128, 128);
   frame++;
   grid.drawGrid();
   if (frame % TETRIS_FRAMES == 0) {
@@ -353,6 +398,11 @@ void keyPressed() {
     else if (keyCode == RIGHT) {
       grid.moveActiveTetra(false);
     }
+    else if (keyCode == DOWN) {
+      if (!grid.tetraStopped()) {
+        grid.moveTetraDown();
+      }
+    }
     else if (keyCode == SHIFT) {
       grid.dropBlock();
     }
@@ -365,5 +415,8 @@ void keyPressed() {
   }  
   else if (key == ' ') {
     grid.holdTetra();
+  }
+  else if (key == 'r') {
+    grid.reset();
   }
 }

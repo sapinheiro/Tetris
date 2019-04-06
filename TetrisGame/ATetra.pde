@@ -51,7 +51,7 @@ abstract class ATetra implements ITetra {
   
   // draws the tetra
   void drawTetra(boolean held, boolean next) {
-    for (int i = 0; i < blocks.length; i++) {
+    for (int i = 0; i < blocks.length; i++) { //<>//
       blocks[i].drawBlock(held, next);
     }
   }
