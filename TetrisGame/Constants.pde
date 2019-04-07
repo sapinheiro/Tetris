@@ -2,6 +2,10 @@ enum TetraType {
   I, O, T, S, Z, J, L;
 }
 
+enum Personality {
+  NONE, REFUSE_SUB, REFUSE_LISTEN, REFUSE_ROTATE, APPEAR_MORE, WONT_APPEAR, TRANSFORM
+}
+
 // size of each block
 int BLOCK_SIZE = 25;
 // adjustment to where we draw the grid

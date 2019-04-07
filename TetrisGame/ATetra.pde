@@ -3,11 +3,32 @@ abstract class ATetra implements ITetra {
   // the position the block is in with regards to rotation
   int rotation;
   Block[] blocks;
+  Personality personality;
   
   ATetra() {
     this.rotation = 0;
+    this.personality = Personality.NONE;
     blocks = new Block[4];
     init();
+  }
+  
+  ATetra(Personality personality, TetraType tetraType) {
+    this.rotation = 0;
+    this.personality = personality;
+    blocks = new Block[4];
+    initPersonality(tetraType);
+  }
+  
+  void initPersonality(TetraType tetraType) {
+    if (this.personality != Personality.TRANSFORM) {
+      init();
+    }
+    else {
+      blocks[0] = new Block(START_X, START_Y, tetraType);
+      blocks[1] = new Block(START_X - 1, START_Y - 1, tetraType);
+      blocks[2] = new Block(START_X - 1, START_Y + 1, tetraType);
+      blocks[3] = new Block(START_X + 2, START_Y, tetraType);
+    }
   }
   
   abstract void init();

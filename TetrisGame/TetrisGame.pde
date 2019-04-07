@@ -27,6 +27,7 @@ class Grid {
   ATetra heldTetra;
   int linesCleared;
   boolean justHeld;
+  TetraStats tetraStats;
   
   Grid() {
     allBlocks = new ArrayList<Block>();
@@ -35,6 +36,7 @@ class Grid {
     heldTetra = null;
     linesCleared = 0;
     justHeld = false;
+    tetraStats = new TetraStats();
     generateTetra();
   }
   
@@ -46,6 +48,7 @@ class Grid {
     heldTetra = null;
     linesCleared = 0;
     justHeld = false;
+    tetraStats.reset();
     generateTetra();
   }
   
@@ -133,6 +136,7 @@ class Grid {
       for (Block b : allBlocks) {
         if (block_x == b.x && (block_y + 1) == b.y) {
           justHeld = false;
+          updateWhiteSpace();
           addBlocks(activeTetra);
           generateTetra();
           return true;
@@ -163,7 +167,35 @@ class Grid {
     return false;
   }
   
-  // drops the block to the lowest possible y value from current position
+  // checks if the given tetra is above whitespace and updates the stats
+  void updateWhiteSpace() {
+    ArrayList<Block> includeActive = new ArrayList<Block>();
+    includeActive.addAll(allBlocks);
+    
+    for (int i = 0; i < activeTetra.blocks.length; i++) {
+      includeActive.add(activeTetra.blocks[i]);
+    }
+    for (int i = 0; i < activeTetra.blocks.length; i++) {
+      int xcoor = activeTetra.blocks[i].x;
+      int ycoor = activeTetra.blocks[i].y;
+      
+      if (ycoor == (ADJ_GRID_HEIGHT - 1)) {
+        continue;
+      }
+      
+      boolean hasWhiteSpace = true;
+      for (Block b : includeActive) {
+        if (b.x == xcoor && b.y == (ycoor + 1)) {
+          hasWhiteSpace = false;
+        }
+      }
+      if (hasWhiteSpace) {
+        tetraStats.updateOnWhiteSpace(activeTetra);
+      }
+    }
+  }
+  
+  //drop block to the lowest possible y value from current position
   void dropBlock() {
     while(!tetraStopped()) {
       moveTetraDown();
@@ -181,13 +213,14 @@ class Grid {
     for (int i = 0; i < tetra.blocks.length; i++) {
       allBlocks.add(tetra.blocks[i]);
     }
-    clearLines();
+    clearLines(tetra);
   }
   
   // clears lines that are full, then adjusts entire board 
-  void clearLines() {
+  void clearLines(ATetra tetra) {
     for (int y = ADJ; y < ADJ_GRID_HEIGHT; y++) {
       if (lineFull(y)) {
+        tetraStats.updateClearedLines(tetra);
         toBeCleared.add(y);
       }
     }
@@ -278,6 +311,10 @@ class Grid {
     if (blocksOverlapping()) {
       activeTetra.rotateTetra(!left);
     }
+    else {
+      // rotation was successful
+      tetraStats.updateRotated(activeTetra);
+    }
   }
   
   // holds the block until later
@@ -286,6 +323,7 @@ class Grid {
       return;
     }
     justHeld = true;
+    tetraStats.updateSubOuts(activeTetra);
     if (heldTetra == null) {
       heldTetra = generateTetraByType(activeTetra.blocks[0].tetraType);
       activeTetra = generateTetraByType(nextTetra.blocks[0].tetraType);
@@ -329,8 +367,8 @@ class Grid {
     textSize(20);
     text("NEXT", (ADJ_GRID_WIDTH + 1) * BLOCK_SIZE, ADJ * BLOCK_SIZE);
     
-    if (heldTetra != null) { //<>//
-      // draws blocks in heldTetra
+    if (heldTetra != null) {
+      // draws blocks in heldTetra //<>//
       heldTetra.drawTetra(true, false);
     }
     fill(0, 0, 0);
