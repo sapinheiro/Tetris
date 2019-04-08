@@ -1,9 +1,12 @@
 import java.util.Random;
+import java.util.Map;
 import processing.sound.*;
 SoundFile file;
 
 int frame = 0;
-int TETRIS_FRAMES = 20;
+int TETRIS_FRAMES = 30;
+// amount of lines to clear before personalites are determined
+int DIFFICULTY = 10;
 
 Random rng = new Random();
 Grid grid;
@@ -17,6 +20,9 @@ class Grid {
   int[][] spaces = new int[GRID_WIDTH][GRID_HEIGHT];
   // all the blocks that are no longer being controlled by the player
   ArrayList<Block> allBlocks;
+  // the tetra types mapped to their personalities
+  // will be a treepmap
+  Map<TetraType, Personality> personalities;
   // lines to be cleared
   ArrayList<Integer> toBeCleared;
   // the falling tetra piece
@@ -28,32 +34,53 @@ class Grid {
   int linesCleared;
   boolean justHeld;
   TetraStats tetraStats;
+  boolean personalityMode;
+  boolean refusalMode;
   
   Grid() {
     allBlocks = new ArrayList<Block>();
+    personalities = new TreeMap<TetraType, Personality>();
     toBeCleared = new ArrayList<Integer>();
     nextTetra = null;
     heldTetra = null;
     linesCleared = 0;
     justHeld = false;
     tetraStats = new TetraStats();
+    personalityMode = false;
+    refusalMode = false;
     generateTetra();
   }
   
   // resets the game
   void reset() {
     allBlocks = new ArrayList<Block>();
+    personalities = new TreeMap<TetraType, Personality>();
     toBeCleared = new ArrayList<Integer>();
     nextTetra = null;
     heldTetra = null;
     linesCleared = 0;
     justHeld = false;
     tetraStats.reset();
+    personalityMode = false;
+    refusalMode = false;
     generateTetra();
   }
   
-  // generates next two Tetra pieces
+  // generates tetra depending on conditions
   void generateTetra() {
+    if (linesCleared < DIFFICULTY) {
+      generateTetraNormal();
+    }
+    else {
+      if (!personalityMode) {
+        personalities = tetraStats.getPieceData();
+      }
+      personalityMode = true;
+      generateTetraPersonality();
+    }
+  }
+  // generates next two Tetra pieces
+  void generateTetraNormal() {
     if (nextTetra == null) {
       activeTetra = generateRandomTetra();
       nextTetra = generateRandomTetra();
@@ -64,7 +91,30 @@ class Grid {
     }
   }
   
+  // generates tetra based on personality traits
+  void generateTetraPersonality() {
+    // this shouldn't ever be true but it's here for posterity
+    if (nextTetra == null) {
+      activeTetra = generateRandomTetra();
+      nextTetra = generateRandomTetra();
+    }
+    else {
+      activeTetra = generateTetraByType(nextTetra.blocks[0].tetraType);
+      nextTetra = generateRandomTetra();
+      Personality p = personalities.get(nextTetra.blocks[0].tetraType);
+      while (p == Personality.WONT_APPEAR && refusalMode) {
+        nextTetra = generateRandomTetra();
+        p = personalities.get(nextTetra.blocks[0].tetraType);
+      }
+    }
+  }
+  
   ATetra generateTetraByType(TetraType tetraType) {
+    Personality p = personalities.get(tetraType);
+    if (p == Personality.TRANSFORM) {
+      return new UglyTetra(tetraType);
+    }
+    
     switch(tetraType) {
       case I:
         return new LineTetra();
@@ -87,25 +137,54 @@ class Grid {
   
   // generates a random tetra piece. 
   ATetra generateRandomTetra() {
-    int rand = rng.nextInt(7);
+    int rand = 0;
+    if (!personalityMode) {
+      rand = rng.nextInt(7);
+    }
+    else {
+      rand = rng.nextInt(12);
+    }
+    ATetra result = new LineTetra();
     switch (rand) {
       case 0: 
-         return new LineTetra();
+         result = new LineTetra();
+         break;
       case 1: 
-         return new SquareTetra();
+         result = new SquareTetra();
+         break;
       case 2: 
-         return new STetra();
+         result = new STetra();
+         break;
       case 3: 
-         return new ZTetra();
+         result = new ZTetra();
+         break;
       case 4: 
-         return new LTetra();
+         result = new LTetra();
+         break;
       case 5:
-         return new JTetra();
+         result = new JTetra();
+         break;
       case 6:
-         return new TTetra();
+         result = new TTetra();
+         break;
       default:
-         throw new IllegalStateException("Something went wrong generating tetra");
+        if (personalityMode) {
+          for (Map.Entry<TetraType, Personality> item : personalities.entrySet()) {
+            if (item.getValue() == Personality.APPEAR_MORE) {
+              return generateTetraByType(item.getKey());
+            }
+          }
+        }
+        else {
+          throw new IllegalStateException("Something went wrong generating tetra");
+        }
     }
+    
+    Personality p = personalities.get(result.blocks[0].tetraType);
+    if (personalityMode && p == Personality.TRANSFORM) {
+      return new UglyTetra(result.blocks[0].tetraType);
+    }
+    return result;
   }
   
   // checks if the highest y is larger than the board
@@ -183,10 +262,10 @@ class Grid {
         continue;
       }
       
-      boolean hasWhiteSpace = true;
+      boolean hasWhiteSpace = false;
       for (Block b : includeActive) {
         if (b.x == xcoor && b.y == (ycoor + 1)) {
-          hasWhiteSpace = false;
+          hasWhiteSpace = true;
         }
       }
       if (hasWhiteSpace) {
@@ -197,6 +276,12 @@ class Grid {
   
   //drop block to the lowest possible y value from current position
   void dropBlock() {
+    if (personalityMode) {
+      Personality p = personalities.get(activeTetra.blocks[0].tetraType);
+      if (p == Personality.REFUSE_LISTEN) {
+        rotateActiveTetra(true);
+      }
+    }
     while(!tetraStopped()) {
       moveTetraDown();
     }
@@ -257,11 +342,28 @@ class Grid {
   
   // moves the active tetra left or right, if it can
   void moveActiveTetra(boolean left) {
-    if (left && canMoveLeft()) {
-      activeTetra.moveTetra("LEFT");
+    boolean wontListen = false;
+    if (personalityMode) {
+      Personality p = personalities.get(activeTetra.blocks[0].tetraType);
+      if (p == Personality.REFUSE_LISTEN) {
+        wontListen = true;
+      }
     }
-    else if (!left && canMoveRight()) {
-      activeTetra.moveTetra("RIGHT");
+    if (!wontListen) {
+      if (left && canMoveLeft()) {
+        activeTetra.moveTetra("LEFT");
+      }
+      else if (!left && canMoveRight()) {
+        activeTetra.moveTetra("RIGHT");
+      }
+    }
+    else {
+      if (!left && canMoveLeft()) {
+        activeTetra.moveTetra("LEFT");
+      }
+      else if (left && canMoveRight()) {
+        activeTetra.moveTetra("RIGHT");
+      }
     }
   }
   
@@ -307,6 +409,12 @@ class Grid {
   
   // rotate tetra in given direction
   void rotateActiveTetra(boolean left) {
+    if (personalityMode) {
+      Personality p = personalities.get(activeTetra.blocks[0].tetraType);
+      if (p == Personality.REFUSE_ROTATE) {
+        return;
+      }
+    }
     activeTetra.rotateTetra(left);
     if (blocksOverlapping()) {
       activeTetra.rotateTetra(!left);
@@ -321,6 +429,15 @@ class Grid {
   void holdTetra() {
     if (justHeld) {
       return;
+    }
+    if (personalityMode) {
+      Personality p = personalities.get(activeTetra.blocks[0].tetraType);
+      if (p == Personality.REFUSE_SUB) {
+        return;
+      }
+      else if (p == Personality.WONT_APPEAR) {
+        refusalMode = true;
+      }
     }
     justHeld = true;
     tetraStats.updateSubOuts(activeTetra);
@@ -345,6 +462,17 @@ class Grid {
       text(msg, 100, 50);
       return;
     }
+    if (personalityMode) {
+      fill(0, 0, 0); 
+      textSize(10);
+      int counter = ADJ + 10;
+      for (Map.Entry<TetraType, Personality> item : personalities.entrySet()) {
+        String name = item.getKey().name();
+        String val = item.getValue().name();
+        text(name + " " + val, BLOCK_SIZE, counter * BLOCK_SIZE);
+        counter++;
+      }
+    }
     if (delay) {
       delay(250);
       delay = false;
@@ -368,12 +496,16 @@ class Grid {
     text("NEXT", (ADJ_GRID_WIDTH + 1) * BLOCK_SIZE, ADJ * BLOCK_SIZE);
     
     if (heldTetra != null) {
-      // draws blocks in heldTetra //<>//
+      // draws blocks in heldTetra
       heldTetra.drawTetra(true, false);
     }
     fill(0, 0, 0);
     textSize(20);
     text("HOLD", BLOCK_SIZE, ADJ * BLOCK_SIZE);
+    
+    fill(0, 0, 0);
+    textSize(12);
+    text("LINES CLEARED: " + linesCleared, 10, (ADJ_GRID_HEIGHT - 3) * BLOCK_SIZE);
     
     // draws blocks on top of grid
     for (Block b : allBlocks) {
