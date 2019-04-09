@@ -8,4 +8,6 @@ interface ITetra {
   void drawTetra(boolean held, boolean next);
   
   void reposition(boolean left);
+  
+  void animateTetra(Personality p);
 }
