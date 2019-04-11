@@ -4,11 +4,22 @@ class ZTetra extends ATetra {
     super();
   }
   
+  ZTetra(int x, int y) {
+    super(x, y);
+  }
+  
   void init() {
     blocks[0] = new Block(START_X, START_Y, TetraType.Z);
     blocks[1] = new Block(START_X + 1, START_Y, TetraType.Z);
     blocks[2] = new Block(START_X + 1, START_Y + 1, TetraType.Z);
     blocks[3] = new Block(START_X + 2, START_Y + 1, TetraType.Z);
+  }
+  
+  void init(int x, int y) {
+    blocks[0] = new Block(x, y, TetraType.Z);
+    blocks[1] = new Block(x + 1, y, TetraType.Z);
+    blocks[2] = new Block(x + 1, y + 1, TetraType.Z);
+    blocks[3] = new Block(x + 2, y + 1, TetraType.Z);
   }
   
   void reposition(boolean left) {

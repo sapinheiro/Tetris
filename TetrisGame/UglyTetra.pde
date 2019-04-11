@@ -8,11 +8,25 @@ class UglyTetra extends ATetra {
     init();
   }
   
+  UglyTetra(TetraType myType, int x, int y) {
+    this.myType = myType;
+    rotation = 0;
+    blocks = new Block[4];
+    init(x, y);
+  }
+  
   void init() {
     blocks[0] = new Block(START_X - 1, START_Y - 1, myType);
     blocks[1] = new Block(START_X, START_Y, myType);
     blocks[2] = new Block(START_X + 1, START_Y, myType);
     blocks[3] = new Block(START_X + 2, START_Y - 1, myType);
+  }
+  
+  void init(int x, int y) {
+    blocks[0] = new Block(x - 1, y - 1, myType);
+    blocks[1] = new Block(x, y, myType);
+    blocks[2] = new Block(x + 1, y, myType);
+    blocks[3] = new Block(x + 2, y - 1, myType);
   }
   
   void reposition(boolean left) {

@@ -4,11 +4,22 @@ class LTetra extends ATetra {
     super();
   }
   
+  LTetra(int x, int y) {
+    super(x, y);
+  }
+  
   void init() {
     blocks[0] = new Block(START_X, START_Y + 1, TetraType.L);
     blocks[1] = new Block(START_X + 1, START_Y + 1, TetraType.L);
     blocks[2] = new Block(START_X + 2, START_Y + 1, TetraType.L);
     blocks[3] = new Block(START_X + 2, START_Y, TetraType.L);
+  }
+  
+  void init(int x, int y) {
+    blocks[0] = new Block(x, y + 1, TetraType.L);
+    blocks[1] = new Block(x + 1, y + 1, TetraType.L);
+    blocks[2] = new Block(x + 2, y + 1, TetraType.L);
+    blocks[3] = new Block(x + 2, y, TetraType.L);
   }
   
   void reposition(boolean left) {

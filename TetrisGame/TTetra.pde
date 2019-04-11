@@ -4,11 +4,22 @@ class TTetra extends ATetra {
     super();
   }
   
+  TTetra(int x, int y) {
+    super(x, y);
+  }
+  
   void init() {
     blocks[0] = new Block(START_X, START_Y, TetraType.T);
     blocks[1] = new Block(START_X - 1, START_Y + 1, TetraType.T);
     blocks[2] = new Block(START_X, START_Y + 1, TetraType.T);
     blocks[3] = new Block(START_X + 1, START_Y + 1, TetraType.T);
+  }
+  
+  void init(int x, int y) {
+    blocks[0] = new Block(x, y, TetraType.T);
+    blocks[1] = new Block(x - 1, y + 1, TetraType.T);
+    blocks[2] = new Block(x, y + 1, TetraType.T);
+    blocks[3] = new Block(x + 1, y + 1, TetraType.T);
   }
   
   // rotation has decreased from previous value 

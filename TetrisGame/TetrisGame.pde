@@ -36,6 +36,7 @@ class Grid {
   TetraStats tetraStats;
   boolean personalityMode;
   boolean refusalMode;
+  boolean animationPlayed;
   
   Grid() {
     allBlocks = new ArrayList<Block>();
@@ -48,6 +49,7 @@ class Grid {
     tetraStats = new TetraStats();
     personalityMode = false;
     refusalMode = false;
+    animationPlayed = false;
     generateTetra();
   }
   
@@ -63,6 +65,7 @@ class Grid {
     tetraStats.reset();
     personalityMode = false;
     refusalMode = false;
+    animationPlayed = false;
     generateTetra();
   }
   
@@ -109,12 +112,12 @@ class Grid {
     }
   }
   
+  // generates tetra from given type
   ATetra generateTetraByType(TetraType tetraType) {
     Personality p = personalities.get(tetraType);
     if (p == Personality.TRANSFORM) {
       return new UglyTetra(tetraType);
     }
-    
     switch(tetraType) {
       case I:
         return new LineTetra();
@@ -130,6 +133,32 @@ class Grid {
         return new JTetra();
       case L:
         return new LTetra();
+      default:
+         throw new IllegalArgumentException("Invalid Tetra Type");
+    }
+  }
+  
+  // generates tetra in given position from given type
+  ATetra generateTetraByType(TetraType tetraType, int x, int y) {
+    Personality p = personalities.get(tetraType);
+    if (p == Personality.TRANSFORM) {
+      return new UglyTetra(tetraType, x, y);
+    }
+    switch(tetraType) {
+      case I:
+        return new LineTetra(x, y);
+      case O:
+        return new SquareTetra(x, y);
+      case T:
+        return new TTetra(x, y);
+      case S:
+        return new STetra(x, y);
+      case Z:
+        return new ZTetra(x, y);
+      case J: 
+        return new JTetra(x, y);
+      case L:
+        return new LTetra(x, y);
       default:
          throw new IllegalArgumentException("Invalid Tetra Type");
     }
@@ -531,15 +560,24 @@ class Grid {
       toBeCleared.clear();
     }
   }
+  
+  void playIntermission() {
+    animationPlayed = true;
+    for (TetraType t : TetraType.values()) {
+      Personality p = personalities.get(t);
+      ATetra tetra = generateTetraByType(t, ADJ + 5, ADJ + (ADJ_GRID_HEIGHT / 2));
+      tetra.animateTetra(p);
+    }
+  }
 }
 
 void setup() {
   size(600, 750);
   smooth();
   grid = new Grid();
-  file = new SoundFile(this, "Tetris99Theme.mp3");
-  file.play();
-  file.loop();
+  //file = new SoundFile(this, "Tetris99Theme.mp3");
+  //file.play();
+  //file.loop();
 }
 
 // generates the drawing
@@ -549,6 +587,9 @@ void draw() {
   clear();
   background(128, 128, 128);
   frame++;
+  if (grid.personalityMode && !grid.animationPlayed) {
+    grid.playIntermission();
+  }
   grid.drawGrid();
   if (frame % TETRIS_FRAMES == 0) {
     if (!grid.tetraStopped()) {

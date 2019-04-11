@@ -4,10 +4,22 @@ class LineTetra extends ATetra {
     super();
   }
   
+  LineTetra(int x, int y) {
+    super(x, y);
+  }
+  
   void init() {
     for (int i = 0; i < blocks.length; i++) {
       int block_x = START_X + i;
       int block_y = START_Y;
+      blocks[i] = new Block(block_x, block_y, TetraType.I);
+    }
+  }
+  
+  void init(int x, int y) {
+    for (int i = 0; i < blocks.length; i++) {
+      int block_x = x + i;
+      int block_y = y;
       blocks[i] = new Block(block_x, block_y, TetraType.I);
     }
   }
