@@ -64,28 +64,28 @@ abstract class ATetra implements ITetra {
     }
   }
   
-  void animateTetra(Personality p) {
+  void animateTetra(Personality p, int frame) {
     switch(p) {
       case NONE:
-        animateNormalTetra();
+        animateNormalTetra(frame);
         break;
       case REFUSE_SUB:
-        animateRefuseSub();
+        animateRefuseSub(frame);
         break;
       case REFUSE_LISTEN:
-        animateRefuseListen();
+        animateRefuseListen(frame);
         break;
       case REFUSE_ROTATE:
-        animateRefuseRotate();
+        animateRefuseRotate(frame);
         break;
       case APPEAR_MORE:
-        animateAppearMore();
+        animateAppearMore(frame);
         break;
       case WONT_APPEAR:
-        animateWontAppear();
+        animateWontAppear(frame);
         break;
       case TRANSFORM:
-        animateTransform();
+        animateTransform(frame);
         break;
       default:
         throw new IllegalArgumentException("This should not happen");
@@ -93,23 +93,23 @@ abstract class ATetra implements ITetra {
   }
   
   // animate normal tetra
-  void animateNormalTetra() {
+  void animateNormalTetra(int frame) {
     // might have to adjust x and y of blocks
     drawTetra(false, false);
   }
   
   // animate a tetra being pulled out of the game, then very quickly going back to its place
-  void animateRefuseSub() {
-    for (int i = 0; i < 10; i++) {
+  void animateRefuseSub(int frame) {
+    if (frame < 10) {
       moveTetra("LEFT");
       drawTetra(false, false);
-      delay(250);
     }
-    delay(500);
-    for (int i = 0; i < 10; i++) {
+    else if (frame == 10) {
+      delay(500);
+    }
+    else if (frame < 21) {
       moveTetra("RIGHT");
       drawTetra(false, false);
-      delay(50);
     }
   }
   
@@ -124,68 +124,87 @@ abstract class ATetra implements ITetra {
   }
   
   // animate a "cocky" piece doing several excited movements on its own
-  void animateRefuseListen() {
-    drawCockyPiece();
-    delay(100);
-    drawTetra(false, false);
-    drawCockyPiece();
-    delay(100);
-    drawTetra(false, false);
-    drawCockyPiece();
-    delay(100);
-    drawTetra(false, false);
-    moveTetra("LEFT");
-    drawTetra(false, false);
-    delay(100);
-    moveTetra("RIGHT");
-    drawTetra(false, false);
-    delay(100);
-    rotateTetra(true);
-    drawTetra(false, false);
+  void animateRefuseListen(int frame) {
+    switch (frame) {
+      case 0:
+        drawCockyPiece();
+        return;
+      case 1: 
+        drawTetra(false, false);
+        return;
+      case 2: 
+        drawCockyPiece();
+        return;
+      case 3:
+        drawTetra(false, false);
+        return;
+      case 4:
+        drawCockyPiece();
+        return;
+      case 5:
+        drawTetra(false, false);
+        return;
+      case 6:
+         moveTetra("LEFT");
+         drawTetra(false, false);
+         return;
+      case 7: 
+         moveTetra("RIGHT");
+         drawTetra(false, false);
+         return;
+      case 8:
+         rotateTetra(true);
+         drawTetra(false, false);
+         return;
+      default:
+         return;
+      
+    }
   }
   
   // animate piece rotating faster and faster then suddenly stopping
-  void animateRefuseRotate() {
-    for (int i = 0; i < 20; i++) {
-      if (i < 5) {
-        rotateTetra(true);
-        delay(250);
-        drawTetra(false, false);
-      }
-      else if (i >=5 && i < 10) {
-        rotateTetra(true);
-        delay(150);
-        drawTetra(false, false);
-      }
-      else if (i >=10 && i < 15) {
-        rotateTetra(true);
-        delay(100);
-        drawTetra(false, false);
-      }
-      else if (i >= 15) {
-        rotateTetra(true);
-        delay(50);
-        drawTetra(false, false);
-      }
+  void animateRefuseRotate(int frame) {
+    if (frame < 5) {
+      rotateTetra(true);
+      delay(250);
+      drawTetra(false, false);
     }
-    drawTetra(false, false);
-    delay(500);
+    else if (frame >=5 && frame < 10) {
+      rotateTetra(true);
+      delay(150);
+      drawTetra(false, false);
+    }
+    else if (frame >=10 && frame < 15) {
+      rotateTetra(true);
+      delay(100);
+      drawTetra(false, false);
+    }
+    else if (frame >= 15) {
+      rotateTetra(true);
+      delay(50);
+      drawTetra(false, false);
+    }
+    else if (frame == 20) {
+      drawTetra(false, false);
+    }
   }
   
   // animate multiple copies of the piece flooding the screen
-  void animateAppearMore() {
-    animateNormalTetra();
+  void animateAppearMore(int frame) {
+    animateNormalTetra(frame);
   }
   
   // animate a "cocky" piece being slowly pulled out and then leaving quickly on its own
-  void animateWontAppear() {
-    for (int i = 0; i < 10; i++) {
+  void animateWontAppear(int frame) {
+    if (frame < 10) {
       moveTetra("LEFT");
       drawTetra(false, false);
       delay(250);
     }
-    delay(500);
-    for (int i = 0; i < 10; i++) {
+    else if (frame == 10) {
+      delay(500);
+    }
+    else if (frame < 21) {
       moveTetra("LEFT");
       drawTetra(false, false);
       delay(50);
@@ -193,7 +212,7 @@ abstract class ATetra implements ITetra {
   }
   
   // animate the piece transforming
-  void animateTransform() {
-    animateNormalTetra();
+  void animateTransform(int frame) {
+    animateNormalTetra(frame);
   }
 }

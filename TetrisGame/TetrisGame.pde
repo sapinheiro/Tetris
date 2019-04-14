@@ -1,12 +1,14 @@
 import java.util.Random;
 import java.util.Map;
+import java.util.Stack;
 import processing.sound.*;
 SoundFile file;
 
 int frame = 0;
+int intermissionFrame = 0;
 int TETRIS_FRAMES = 30;
 // amount of lines to clear before personalites are determined
-int DIFFICULTY = 10;
+int DIFFICULTY = 5;
 
 Random rng = new Random();
 Grid grid;
@@ -37,6 +39,9 @@ class Grid {
   boolean personalityMode;
   boolean refusalMode;
   boolean animationPlayed;
+  Stack<TetraType> animations;
+  ATetra currentAnimation;
+  Map<Personality, Integer> personalityFrameCounter;
   
   Grid() {
     allBlocks = new ArrayList<Block>();
@@ -50,6 +55,10 @@ class Grid {
     personalityMode = false;
     refusalMode = false;
     animationPlayed = false;
+    animations = new Stack<TetraType>();
+    personalityFrameCounter = new TreeMap<Personality, Integer>();
+    initializeAnimations();
+    currentAnimation = null;
     generateTetra();
   }
   
@@ -66,7 +75,23 @@ class Grid {
     personalityMode = false;
     refusalMode = false;
     animationPlayed = false;
+    currentAnimation = null;
+    initializeAnimations();
     generateTetra();
+  }
+  
+  void initializeAnimations() {
+    animations.clear();
+    for (TetraType t: TetraType.values()) {
+      animations.push(t);
+    }
+    personalityFrameCounter.put(Personality.NONE, 5);
+    personalityFrameCounter.put(Personality.REFUSE_SUB, 20);
+    personalityFrameCounter.put(Personality.REFUSE_LISTEN, 8);
+    personalityFrameCounter.put(Personality.REFUSE_ROTATE, 20);
+    personalityFrameCounter.put(Personality.APPEAR_MORE, 5);
+    personalityFrameCounter.put(Personality.WONT_APPEAR, 20);
+    personalityFrameCounter.put(Personality.TRANSFORM, 5);
   }
   
   // generates tetra depending on conditions
@@ -562,11 +587,30 @@ class Grid {
   }
   
   void playIntermission() {
-    animationPlayed = true;
-    for (TetraType t : TetraType.values()) {
-      Personality p = personalities.get(t);
-      ATetra tetra = generateTetraByType(t, ADJ + 5, ADJ + (ADJ_GRID_HEIGHT / 2));
-      tetra.animateTetra(p);
+    if (animations.size() == 7) {
+      delay(500);
+    }
+    if (currentAnimation == null && animations.size() > 0) {
+      TetraType t = animations.pop();
+      currentAnimation = generateTetraByType(t, ADJ + 5, ADJ + (ADJ_GRID_HEIGHT / 2));
+      intermissionFrame = 0;
+    }
+    else if (currentAnimation == null) {
+      animationPlayed = true;
+      return;
+    }
+    Personality p = personalities.get(currentAnimation.blocks[0].tetraType);
+    int maxFrame = personalityFrameCounter.get(p);
+    if (intermissionFrame <= maxFrame) {
+      if (frame % TETRIS_FRAMES == 0) {
+        currentAnimation.animateTetra(p, intermissionFrame);
+      }
+      else {
+        currentAnimation.drawTetra(false, false);
+      }
+    }
+    else {
+      currentAnimation = null;
     }
   }
 }
@@ -575,9 +619,9 @@ void setup() {
   size(600, 750);
   smooth();
   grid = new Grid();
-  //file = new SoundFile(this, "Tetris99Theme.mp3");
-  //file.play();
-  //file.loop();
+  file = new SoundFile(this, "Tetris99Theme.mp3");
+  file.play();
+  file.loop();
 }
 
 // generates the drawing
@@ -589,11 +633,16 @@ void draw() {
   frame++;
   if (grid.personalityMode && !grid.animationPlayed) {
     grid.playIntermission();
+    if (frame % TETRIS_FRAMES == 0) {
+      intermissionFrame++;
+    }
   }
-  grid.drawGrid();
-  if (frame % TETRIS_FRAMES == 0) {
-    if (!grid.tetraStopped()) {
-      grid.moveTetraDown();
+  else {
+    grid.drawGrid();
+    if (frame % TETRIS_FRAMES == 0) {
+      if (!grid.tetraStopped()) {
+        grid.moveTetraDown();
+    }
     }
   }
 }

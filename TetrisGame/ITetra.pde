@@ -11,5 +11,5 @@ interface ITetra {
   
   void reposition(boolean left);
   
-  void animateTetra(Personality p);
+  void animateTetra(Personality p, int frame);
 }
