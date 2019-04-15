@@ -7,8 +7,9 @@ SoundFile file;
 int frame = 0;
 int intermissionFrame = 0;
 int TETRIS_FRAMES = 30;
+int ANIMATE_FRAMES = 2;
 // amount of lines to clear before personalites are determined
-int DIFFICULTY = 5;
+int DIFFICULTY = 10;
 
 Random rng = new Random();
 Grid grid;
@@ -85,13 +86,13 @@ class Grid {
     for (TetraType t: TetraType.values()) {
       animations.push(t);
     }
-    personalityFrameCounter.put(Personality.NONE, 5);
-    personalityFrameCounter.put(Personality.REFUSE_SUB, 20);
-    personalityFrameCounter.put(Personality.REFUSE_LISTEN, 8);
-    personalityFrameCounter.put(Personality.REFUSE_ROTATE, 20);
+    personalityFrameCounter.put(Personality.NONE, 10);
+    personalityFrameCounter.put(Personality.REFUSE_SUB, 14);
+    personalityFrameCounter.put(Personality.REFUSE_LISTEN, 9);
+    personalityFrameCounter.put(Personality.REFUSE_ROTATE, 9);
     personalityFrameCounter.put(Personality.APPEAR_MORE, 5);
-    personalityFrameCounter.put(Personality.WONT_APPEAR, 20);
-    personalityFrameCounter.put(Personality.TRANSFORM, 5);
+    personalityFrameCounter.put(Personality.WONT_APPEAR, 9);
+    personalityFrameCounter.put(Personality.TRANSFORM, 10);
   }
   
   // generates tetra depending on conditions
@@ -602,12 +603,7 @@ class Grid {
     Personality p = personalities.get(currentAnimation.blocks[0].tetraType);
     int maxFrame = personalityFrameCounter.get(p);
     if (intermissionFrame <= maxFrame) {
-      if (frame % TETRIS_FRAMES == 0) {
-        currentAnimation.animateTetra(p, intermissionFrame);
-      }
-      else {
-        currentAnimation.drawTetra(false, false);
-      }
+      currentAnimation.animateTetra(p, intermissionFrame);
     }
     else {
       currentAnimation = null;
@@ -633,7 +629,7 @@ void draw() {
   frame++;
   if (grid.personalityMode && !grid.animationPlayed) {
     grid.playIntermission();
-    if (frame % TETRIS_FRAMES == 0) {
+    if (frame % ANIMATE_FRAMES == 0) {
       intermissionFrame++;
     }
   }

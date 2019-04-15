@@ -100,17 +100,27 @@ abstract class ATetra implements ITetra {
   
   // animate a tetra being pulled out of the game, then very quickly going back to its place
   void animateRefuseSub(int frame) {
-    if (frame < 10) {
+    if (frame < 3) {
       moveTetra("LEFT");
       drawTetra(false, false);
     }
-    else if (frame == 10) {
-      delay(500);
+    else if (frame == 3) {
+      drawTetra(false, false);
+      delay(250);
     }
-    else if (frame < 21) {
+    else if (frame < 8) {
       moveTetra("RIGHT");
       drawTetra(false, false);
     }
+    else if (frame < 12) {
+      moveTetra("LEFT");
+      drawTetra(false, false);
+    }
+    else if (frame < 15) {
+      moveTetra("RIGHT");
+      drawTetra(false, false);
+    }
+    delay(150);
   }
   
   // draws a piece a golden color
@@ -128,33 +138,47 @@ abstract class ATetra implements ITetra {
     switch (frame) {
       case 0:
         drawCockyPiece();
+        delay(500);
         return;
       case 1: 
         drawTetra(false, false);
+        delay(250);
         return;
       case 2: 
         drawCockyPiece();
+        delay(500);
         return;
       case 3:
         drawTetra(false, false);
+        delay(250);
         return;
       case 4:
         drawCockyPiece();
+        delay(500);
         return;
       case 5:
         drawTetra(false, false);
+        delay(250);
         return;
       case 6:
          moveTetra("LEFT");
          drawTetra(false, false);
+         delay(250);
          return;
       case 7: 
          moveTetra("RIGHT");
          drawTetra(false, false);
+         delay(250);
          return;
-      case 8:
+      case 8: 
+         moveTetra("RIGHT");
+         drawTetra(false, false);
+         delay(250);
+         return;
+      case 9:
          rotateTetra(true);
          drawTetra(false, false);
+         delay(250);
          return;
       default:
          return;
@@ -164,49 +188,59 @@ abstract class ATetra implements ITetra {
   
   // animate piece rotating faster and faster then suddenly stopping
   void animateRefuseRotate(int frame) {
-    if (frame < 5) {
+    if (frame < 3) {
       rotateTetra(true);
       delay(250);
       drawTetra(false, false);
     }
-    else if (frame >=5 && frame < 10) {
+    else if (frame >=3 && frame < 6) {
       rotateTetra(true);
       delay(150);
       drawTetra(false, false);
     }
-    else if (frame >=10 && frame < 15) {
-      rotateTetra(true);
-      delay(100);
-      drawTetra(false, false);
-    }
-    else if (frame >= 15) {
+    else if (frame >= 6) {
       rotateTetra(true);
       delay(50);
       drawTetra(false, false);
     }
-    else if (frame == 20) {
+    else if (frame == 9) {
       drawTetra(false, false);
+      delay(1000);
     }
   }
   
   // animate multiple copies of the piece flooding the screen
   void animateAppearMore(int frame) {
-    animateNormalTetra(frame);
+    Grid g = new Grid();
+    int offset = 2;
+    ATetra tetra1 = (g.generateTetraByType(this.blocks[0].tetraType, this.blocks[0].x + offset, this.blocks[0].y + offset));
+    ATetra tetra2 = (g.generateTetraByType(this.blocks[0].tetraType, this.blocks[0].x + offset, this.blocks[0].y - offset));
+    ATetra tetra3 = (g.generateTetraByType(this.blocks[0].tetraType, this.blocks[0].x - offset, this.blocks[0].y + offset));
+    ATetra tetra4 = (g.generateTetraByType(this.blocks[0].tetraType, this.blocks[0].x - offset, this.blocks[0].y - offset));
+    ATetra tetra5 = (g.generateTetraByType(this.blocks[0].tetraType, this.blocks[0].x , this.blocks[0].y - (offset * 3)));
+    
+    tetra1.drawTetra(false, false);
+    tetra2.drawTetra(false, false);
+    tetra3.drawTetra(false, false);
+    tetra4.drawTetra(false, false);
+    tetra5.drawTetra(false, false);
+    delay(250);
   }
   
-  // animate a "cocky" piece being slowly pulled out and then leaving quickly on its own
+  // animate a piece being slowly pulled out and then leaving quickly on its own
   void animateWontAppear(int frame) {
-    if (frame < 10) {
+    if (frame < 3) {
       moveTetra("LEFT");
-      drawTetra(false, false);
+      drawCockyPiece();
       delay(250);
     }
-    else if (frame == 10) {
+    else if (frame == 3) {
+      drawCockyPiece();
       delay(500);
     }
-    else if (frame < 21) {
+    else if (frame < 8) {
       moveTetra("LEFT");
-      drawTetra(false, false);
+      drawCockyPiece();
       delay(50);
     }
   }
@@ -214,5 +248,6 @@ abstract class ATetra implements ITetra {
   // animate the piece transforming
   void animateTransform(int frame) {
     animateNormalTetra(frame);
+    delay(50);
   }
 }
